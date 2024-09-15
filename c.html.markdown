@@ -44,10 +44,12 @@ Multi-line comments don't nest /* Be careful */  // comment ends on this line...
 // Constants are written in all-caps out of convention, not requirement
 #define DAYS_IN_YEAR 365
 
-// Enumeration constants are also ways to declare constants.
-// All statements must end with a semicolon
+// Enumerations are another way to declare constants.
 enum days {SUN, MON, TUE, WED, THU, FRI, SAT};
 // SUN gets 0, MON gets 1, TUE gets 2, etc.
+
+// enum days {...} is an enum declaration statement.
+// All statements must end with a semicolon
 
 // Enumeration values can also be specified
 enum days {SUN = 1, MON, TUE, WED = 99, THU, FRI, SAT};
@@ -78,7 +80,7 @@ int add_two_ints(int x1, int x2); // function prototype
 // it is recommended to name arguments in the prototype as well for easier inspection
 
 // Function prototypes are not necessary if the function definition comes before
-// any other function that calls that function. However, it's standard practice to
+// other functions that call that function. However, it's standard practice to
 // always add the function prototype to a header file (*.h) and then #include that
 // file at the top. This prevents any issues where a function might be called
 // before the compiler knows of its existence, while also giving the developer a
@@ -105,6 +107,7 @@ int main (int argc, char** argv)
   // '&' is used to define the location
   // where we want to store the input value
   int input;
+  printf("input an int: ");
   scanf("%d", &input);
 
   ///////////////////////////////////////
@@ -113,10 +116,10 @@ int main (int argc, char** argv)
 
   // Compilers that are not C99-compliant require that variables MUST be
   // declared at the top of the current block scope.
-  // Compilers that ARE C99-compliant allow declarations near the point where
-  // the value is used.
-  // For the sake of the tutorial, variables are declared dynamically under
-  // C99-compliant standards.
+  // Compilers that ARE C99-compliant MUST allow declarations near the
+  // point where the value is used.
+  // For the sake of the tutorial, variables are declared near the
+  // point where they're used as in C99 standards.
 
   // ints are usually 4 bytes (use the `sizeof` operator to check)
   int x_int = 0;
@@ -128,6 +131,7 @@ int main (int argc, char** argv)
   // This is usually 1 byte, but for some systems it can be more (ex. for TMS320 from TI it's 2 bytes).
   char x_char = 0;
   char y_char = 'y'; // Char literals are quoted with ''
+  // NOTE: 'y' is a char literal, "y" is a string (an array of chars). They are different!
 
   // longs are often 4 to 8 bytes; long longs are guaranteed to be at least
   // 8 bytes
@@ -153,8 +157,16 @@ int main (int argc, char** argv)
   // sizeof(obj) yields the size of the expression (variable, literal, etc.).
   printf("%zu\n", sizeof(int)); // => 4 (on most machines with 4-byte words)
 
+  // The "%zu" and "%d" above are format-specifiers for printf.  More
+  // will be explained below. %d is integers. %zu here is for printing
+  // a size_t value (unsigned size). This is a C99 standard.
+  
+  // If you are trying to get this printf to work on C89, you can cast
+  // the size_t to an unsigned long and print that.
+  printf("%lu\n", (unsigned long) sizeof(int)); => 4 (on most machines with 4-byte words)
+  
   // If the argument of the `sizeof` operator is an expression, then its argument
-  // is not evaluated (except VLAs (see below)).
+  // is not evaluated (except Variable Length Arrays (see below)).
   // The value it yields in this case is a compile-time constant.
   int a = 1;
   // size_t is an unsigned integer type of at least 2 bytes used to represent
@@ -168,14 +180,14 @@ int main (int argc, char** argv)
   int my_int_array[20]; // This array occupies 4 * 20 = 80 bytes
   // (assuming 4-byte words)
 
-  // You can initialize an array of twenty ints that all equal 0 thusly:
+  // You can initialize an array of twenty ints that all equal 0 like this:
   int my_array[20] = {0};
   // where the "{0}" part is called an "array initializer".
   // All elements (if any) past the ones in the initializer are initialized to 0:
   int my_array[5] = {1, 2};
   // So my_array now has five elements, all but the first two of which are 0:
   // [1, 2, 0, 0, 0]
-  // NOTE that you get away without explicitly declaring the size
+  // You can get away without explicitly declaring the size
   // of the array IF you initialize the array on the same line:
   int my_array[] = {0};
   // NOTE that, when not declaring the size, the size of the array is the number
@@ -327,7 +339,7 @@ int main (int argc, char** argv)
   // - shifting into the sign bit of a signed integer (int a = 1 << 31)
   // - left-shifting a negative number (int a = -1 << 2)
   // - shifting by an offset which is >= the width of the type of the LHS:
-  //   int a = 1 << 32; // UB if int is 32 bits wide
+  //   int a = 1 << 32; // unefined behavior if int is 32 bits wide
 
   ///////////////////////////////////////
   // Control Structures
@@ -341,7 +353,7 @@ int main (int argc, char** argv)
     printf("I print\n");
   }
 
-  // While loops exist
+  // While loops
   int ii = 0;
   while (ii < 10) { //ANY value less than ten is true.
     printf("%d, ", ii++); // ii++ increments ii AFTER using its current value.
@@ -357,7 +369,7 @@ int main (int argc, char** argv)
 
   printf("\n");
 
-  // For loops too
+  // For loops
   int jj;
   for (jj=0; jj < 10; jj++) {
     printf("%d, ", jj);
@@ -365,7 +377,7 @@ int main (int argc, char** argv)
 
   printf("\n");
 
-  // *****NOTES*****:
+  // *****NOTE*****:
   // Loops and Functions MUST have a body. If no body is needed:
   int i;
   for (i = 0; i <= 5; i++) {
@@ -398,7 +410,8 @@ int main (int argc, char** argv)
     Using "goto" in C
   */
   typedef enum { false, true } bool;
-  // for C don't have bool as data type before C99 :(
+  // No bool datatype before C99, so add it
+  // for the goto example.
   bool disaster = false;
   int i, j;
   for(i=0; i<100; ++i)
@@ -416,7 +429,7 @@ int main (int argc, char** argv)
     this will print out "Error occurred at i = 51 & j = 99."
   */
   /*
-    it is generally considered bad practice to do so, except if
+    it is generally considered bad practice to do so unless
     you really know what you are doing. See
     https://en.wikipedia.org/wiki/Spaghetti_code#Meaning
   */
@@ -455,11 +468,11 @@ int main (int argc, char** argv)
 
   // A pointer is a variable declared to store a memory address. Its declaration will
   // also tell you the type of data it points to. You can retrieve the memory address
-  // of your variables, then mess with them.
+  // of variables, and then mess with them.
 
   int x = 0;
   printf("%p\n", (void *)&x); // Use & to retrieve the address of a variable
-  // (%p formats an object pointer of type void *)
+  // %p formats an object pointer of type (void *)
   // => Prints some address in memory;
 
   // Pointers start with * in their declaration
@@ -471,14 +484,14 @@ int main (int argc, char** argv)
 
   // To retrieve the value at the address a pointer is pointing to,
   // put * in front to dereference it.
-  // Note: yes, it may be confusing that '*' is used for _both_ declaring a
+  // NOTE: yes, it may be confusing that '*' is used for _both_ declaring a
   // pointer and dereferencing it.
   printf("%d\n", *px); // => Prints 0, the value of x
 
   // You can also change the value the pointer is pointing to.
-  // We'll have to wrap the dereference in parenthesis because
-  // ++ has a higher precedence than *.
   (*px)++; // Increment the value px is pointing to by 1
+  // Here, we have to wrap the dereference in parenthesis because
+  // ++ has a higher precedence than *.
   printf("%d\n", *px); // => Prints 1
   printf("%d\n", x); // => Prints 1
 
