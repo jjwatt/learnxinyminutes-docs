@@ -59,7 +59,7 @@ macro system.
 (= 1 1) ; => true
 (= 2 1) ; => false
 
-;; Nesting forms works as you expect
+;; Nesting forms works as you expect.
 (+ 1 (- 3 2)) ; = 1 + (3 - 2) => 2
 
 ;; Comparisons
@@ -71,7 +71,7 @@ macro system.
 
 ;; Bitwise operators
 ;; Caveats: Only available in Lua 5.3+ unless you use the
-;; --use-bit-lib flag or the useBitLib flag in the options table
+;; --use-bit-lib flag or the useBitLib flag in the options table.
 (lshift 1) ; => 2
 (rshift 1) ; => 0
 (band 5 3) ; => 1
@@ -141,7 +141,7 @@ false ; for false
 (let [x (values 1 2 3)]
   x) ; => 1
 
-;; `global` set global variable
+;; `global` set global variable.
 ;; Sets a global variable to a new value. Note that there is no
 ;; distinction between introducing a new global and changing the value
 ;; of an existing one. This supports destructuring and multiple-value
@@ -205,7 +205,7 @@ false ; for false
 ;; Looks up a given key in a table. Multiple arguments will perform
 ;; nested lookup. If any subsequent keys is not presnet, will
 ;; short-circuit to nil.
-(?. t :key1) ; => "value"
+(?. t :key1) ; => "value1"
 (let [t {:a [2 3 4]}] (?. t :a 4 :b)) ; => nil
 (let [t {:a [2 3 4 {:b 42}]}] (?. t :a 4 :b)) ; => 42
 
@@ -220,6 +220,13 @@ false ; for false
 ;; The table.sort function sorts a table in-place, as a
 ;; side-effect. It takes an optional comparator function which should
 ;; return true when its first argument is less than the second.
+(let [t [3 2 1]]
+  (table.sort t)
+  (print (table.concat t ", "))) ; => "1, 2, 3"
+
+(let [fruits [:apple :banana :cherry]]
+  (table.sort fruits (fn [a b] (> a b)))
+  (_G.pp fruits)) ; => ["cherry" "banana" "apple"]
 
 ;; The table.unpack function returns all the elements in the table as
 ;; multiple values. Note that table.unpack is just unpack in Lua 5.1.
@@ -247,9 +254,9 @@ false ; for false
 ;; it's truthy. Intended for side-effects. The last form is the return
 ;; value.
 (when launch-missiles?
-  (power-on)
-  (open-doors)
-  (fire))
+  (print "power-on")
+  (print "open-doors")
+  (print "fire"))
 
 ;;,------------------
 ;;| Loops & Iteration
@@ -257,23 +264,27 @@ false ; for false
 
 ;; each: general iteration
 ;; `each` runs the body once for each value provided by the iterator.
+(local mytbl {(fn [x] (+ 1 x)) 1})
 (each [key value (pairs mytbl)]
   (print "executing key")
-  (print (f value)))
+  (print (key value)))
 
 ;; Any loop can be terminated early by placing an &until clause at the
 ;; end of the bindings
-(local out [])
-(each [_ value (pairs tbl) &until (< max-len (length out))]
-  (table.insert out value))
+(let [max-len 3
+      tbl {:a 1 :b 2 :c 3 :d 4 :e 5}]
+  (local out [])
+  (each [_ value (pairs tbl) &until (< max-len (length out))]
+    (table.insert out value))
+  (print "Items in out:" (length out)))
 
 ;; `for` is a numeric loop with start, stop and optional step.
 (for [i 1 10 2]
-  (log-number i)
   (print i)) ;; print odd numbers under 10
 
 ;; Like each, loops using for can also be terminated early with an
 ;; &until clause
+(fn maxed-out? [n] (> n 100))
 (var x 0)
 (for [i 1 128 &until (maxed-out? x)]
   (set x (+ x i)))
@@ -286,6 +297,15 @@ false ; for false
   (when (< 0.95 (math.random))
     (set done? true)))
 ;; while uses the native lua while loop
+
+;; `values` Returns multiple values from a function. Usually used to
+;; signal failure by returning nil followed by a message.
+(fn [filename]
+  (if (valid-file-name? filename)
+      (open-file filename)
+      (values nil (.. "Invalid filename: " filename))))
+;; See the Destructuring and Matching sections for more advanced Flow
+;; Control.
 
 ;; `do` evaluate multiple forms returning last value
 ;; Accepts any number of forms and evaluates all of them in order,
@@ -326,6 +346,13 @@ false ; for false
     (tset tbl (+ (length tbl) 1) (if (< 2 v) (* v v))))
   tbl)
 
+;; Both icollect and collect take an &into clause which allows you put
+;; your results into an existing table instead of starting with an
+;; empty one:
+(icollect [_ x (ipairs [2 3]) &into [9]]
+  (* x 11))
+;; -> [9 22 33]
+
 ;; The `collect` macro is almost identical, except that the body should
 ;; return two things: a key and a value.
 (collect [k v (pairs {:apple "red" :orange "orange" :lemon "yellow"})]
@@ -347,13 +374,6 @@ false ; for false
   k (* v 5))
 ;; -> {:a 425 :b 260 :c 3105 :d 220}
 
-;; If the index and value are given directly in the body of collect and
-;; not nested in an outer form, then the values can be omitted for
-;; brevity
-(icollect [_ x (ipairs [2 3]) &into [9]]
-  (* x 11))
-;; -> [9 22 33]
-
 ;; accumulate
 ;; Runs through an iterator and performs accumulation, similar to fold
 ;; and reduce commonly used in functional programming languages. Like
@@ -374,7 +394,7 @@ false ; for false
 ;; range. Accepts `&until` just like `for` and `accumulate`.
 (faccumulate [n 0 i 1 5] (+ n i)) ; => 15
 
-;; `fcollect` range comprehension Similarly to `icollect`, `fcollect`
+;; `fcollect` range comprehension. Similarly to `icollect`, `fcollect`,
 ;; provides a way of building a sequential table. Unlike `icollect`,
 ;; instead of an iterator it traverses a range, as accepted by the
 ;; `for` special. The `&into` and `&until` clauses work the same as in
@@ -388,16 +408,6 @@ false ; for false
     (if (> i 2)
         (table.insert tbl (* i i))))
   tbl)
-
-;; `values` Returns multiple values from a function. Usually used to
-;; signal failure by returning nil followed by a message.
-(fn [filename]
-  (if (valid-file-name? filename)
-      (open-file filename)
-      (values nil (.. "Invalid filename: " filename))))
-
-;; See the Destructuring and Matching sections for more advanced Flow
-;; Control.
 
 ;; ------------ ;;
 ;; 4. Functions ;;
